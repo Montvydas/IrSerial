@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText transmitFreq;
     private int minFreq;
     private int maxFreq;
+    private IRcontroller irController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,37 +50,32 @@ public class MainActivity extends AppCompatActivity {
 
         irManager = (ConsumerIrManager) getSystemService(CONSUMER_IR_SERVICE);
 
-        if (irManager.hasIrEmitter()){
-            Toast.makeText(this, "IR supported!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "IR NOT supported!", Toast.LENGTH_SHORT).show();
-            try{
-                Thread.sleep(100);
-                finish();
-            } catch (InterruptedException e){
+        irController = new IRcontroller(this);
 
-            }
-        }
+        minFreqText.setText("Min Freq= " + irController.getMinFreq() + " Hz");
+        maxFreqText.setText("Max Freq= " + irController.getMaxFreq() + " Hz");
 
-        // Check permissions
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.TRANSMIT_IR)
-                != PackageManager.PERMISSION_GRANTED){
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_CONTACTS},
-                    MY_PERMISSIONS_REQUEST_TRANSMIT_IR);
-        }
+//        if (irManager.hasIrEmitter()){
+//            Toast.makeText(this, "IR supported!", Toast.LENGTH_SHORT).show();
+//        } else {
+//            Toast.makeText(this, "IR NOT supported!", Toast.LENGTH_SHORT).show();
+//            try{
+//                Thread.sleep(100);
+//                finish();
+//            } catch (InterruptedException e){
+//
+//            }
+//        }
 
-        irFrequencies = irManager.getCarrierFrequencies();
-
-        minFreq = irFrequencies[0].getMinFrequency();
-        maxFreq = irFrequencies[0].getMaxFrequency();
-
-        minFreqText.setText("Min Freq= " + minFreq + " Hz");
-        maxFreqText.setText("Max Freq= " + maxFreq + " Hz");
-
-        Log.e("min Freq ", ""+irFrequencies[0].getMinFrequency());
-        Log.e("max Freq ", "" + irFrequencies[0].getMaxFrequency());
+//        // Check permissions
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.TRANSMIT_IR)
+//                != PackageManager.PERMISSION_GRANTED){
+//
+//            ActivityCompat.requestPermissions(this,
+//                    new String[]{Manifest.permission.READ_CONTACTS},
+//                    MY_PERMISSIONS_REQUEST_TRANSMIT_IR);
+//        }
     }
 
     public void sendIR (View view){
@@ -98,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (freq >= minFreq && freq <= maxFreq) {
 //            sendLG(0x20DF10EF, 32);
-            sendLG(0x54321, 20);
+            sendLG(0x4321, 16);
 //            sendSony(0x1234, 16);
             int[] newData = new int[myData.size()];
             int index = 0;
@@ -115,6 +111,21 @@ public class MainActivity extends AppCompatActivity {
 //                newData[newData.length-1-i] = tmp;
 //            }
             int[] irSignal = {9000, 4500, 560, 560, 560, 560, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 39416}; //AnalysIR Batch Export (IRremote) - RAW
+
+//            String binary = hexToBin("123");
+//            String binary = Integer.toString(1234, 2);
+            Log.e("hex=", Integer.toHexString(1234));
+            Log.e("binary=", Integer.toBinaryString(1234));
+
+            String binary = Integer.toBinaryString(123);
+            for (int i = 0; i < binary.length(); i++){
+                if (binary.charAt(i) == '0'){
+
+                }
+                else {
+
+                }
+            }
 
             irManager.transmit(freq, newData);
             Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_SHORT).show();
@@ -145,31 +156,31 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_TRANSMIT_IR: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                } else {
-                    // permission denied, boo! Disable the
-                    Toast.makeText(this, "You need this permission to ru nthe app!", Toast.LENGTH_SHORT).show();
-                    try {
-                        Thread.sleep(100);
-                        finish();
-                    } catch (InterruptedException e){
-                        Log.e("IR permission", "DENIED");
-                    }
-                }
-                return;
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode,
+//                                           String permissions[], int[] grantResults) {
+//        switch (requestCode) {
+//            case MY_PERMISSIONS_REQUEST_TRANSMIT_IR: {
+//                // If request is cancelled, the result arrays are empty.
+//                if (grantResults.length > 0
+//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                } else {
+//                    // permission denied, boo! Disable the
+//                    Toast.makeText(this, "You need this permission to ru nthe app!", Toast.LENGTH_SHORT).show();
+//                    try {
+//                        Thread.sleep(100);
+//                        finish();
+//                    } catch (InterruptedException e){
+//                        Log.e("IR permission", "DENIED");
+//                    }
+//                }
+//                return;
+//            }
+//
+//            // other 'case' lines to check for other
+//            // permissions this app might request
+//        }
+//    }
 
     private int SONY_BITS       = 12;
     private int SONY_HDR_MARK   = 2400;
