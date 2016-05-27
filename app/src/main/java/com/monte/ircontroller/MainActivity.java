@@ -16,8 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.monte.ircontroller.library.*;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView maxFreqText;
     private EditText transmitFreq;
     private IRcontroller irController;
+    private ConsumerIrManager manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +39,25 @@ public class MainActivity extends AppCompatActivity {
 
         irController = new IRcontroller(this);
 
+        manager = ConsumerIrManager.getSupportConsumerIrManager(this);
+
+
+
 //        minFreqText.setText("Min Freq= " + irController.getMinFreq() + " Hz");
 //        maxFreqText.setText("Max Freq= " + irController.getMaxFreq() + " Hz");
     }
 
     public void sendIR (View view){
-        irController.sendSonyInt(69);
-        Log.e("Sending HEX", Integer.toHexString(69));
-        irController.sendLGInt(133);
+//        IrCommand necCommand = IrCommand.NEC.buildNEC(32, 0x723F);
+//        manager.transmit(necCommand);
+
+        irController.sendSamsung(0x12345678);
+//        irController.sendSony(69);
+//        irController.sendSonyHex(45);
+//        Log.e("Sending HEX", Integer.toHexString(69));
+//        irController.sendSonyHex(Integer.parseInt(transmitFreq.getText().toString()));
+//        irController.sendLGHex(Integer.parseInt(transmitFreq.getText().toString()));
+//        irController.sendLG(0x12345);
 
         Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_SHORT).show();
     }
