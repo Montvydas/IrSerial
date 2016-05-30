@@ -13,6 +13,12 @@
     android:orientation="vertical"
     tools:showIn="@layout/activity_main">
 
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/protocolSpinner"
+        android:layout_gravity="center_horizontal" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,11 +33,48 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="" />
-    <EditText
-        android:id="@+id/transmitFrequencyText"
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="38400"/>
+        android:weightSum="3"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Frequency:"
+            android:layout_weight="1"/>
+        <EditText
+            android:id="@+id/transmitFrequencyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="38400"
+            android:gravity="center"
+            android:layout_weight="2"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="3"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Data (hex):"
+            android:layout_weight="1"/>
+        <EditText
+            android:id="@+id/transmitDataText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="123"
+            android:gravity="center"
+            android:layout_weight="2"/>
+    </LinearLayout>
+
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

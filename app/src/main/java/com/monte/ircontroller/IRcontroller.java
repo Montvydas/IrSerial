@@ -18,6 +18,8 @@ import java.util.List;
  * Created by monte on 26/05/16.
  */
 public class IRcontroller {
+    public int DEBUG = 1;
+
     private ConsumerIrManager irManager;
     private Context context;
     private int minFreq;
@@ -28,7 +30,14 @@ public class IRcontroller {
     public List<Integer> listPulses = new ArrayList<>();
     private int frequency = 38400;
 
+    public IRcontroller (Context context, int status){
+        if (status == DEBUG){
+            //enable debugging
+        }
+    }
+
     public IRcontroller(Context context) {
+
         this.irManager = (ConsumerIrManager) context.getSystemService(AppCompatActivity.CONSUMER_IR_SERVICE);
         this.context = context;
 
@@ -252,34 +261,9 @@ public class IRcontroller {
         listPulses.add(NEC_RPT_SPACE);
 
         Log.e("dataToSend", listPulses.toString());
-        irManager.transmit(40000, listToArray(listPulses));
+        irManager.transmit(38000, listToArray(listPulses));
         return true;
     }
-
-//    void  IRsend::sendNEC (unsigned long data,  int nbits)
-//    {
-//        // Set IR carrier frequency
-//        enableIROut(38);
-//
-//        // Header
-//        mark(NEC_HDR_MARK);
-//        space(NEC_HDR_SPACE);
-//
-//        // Data
-//        for (unsigned long  mask = 1UL << (nbits - 1);  mask;  mask >>= 1) {
-//        if (data & mask) {
-//            mark(NEC_BIT_MARK);
-//            space(NEC_ONE_SPACE);
-//        } else {
-//            mark(NEC_BIT_MARK);
-//            space(NEC_ZERO_SPACE);
-//        }
-//    }
-//
-//        // Footer
-//        mark(NEC_BIT_MARK);
-//        space(0);  // Always end with the LED off
-//    }
 
     int SAMSUNG_BITS        =  32;
     int SAMSUNG_HDR_MARK    = 5000;
@@ -346,6 +330,12 @@ public class IRcontroller {
     int JVC_ZERO_SPACE  =   550;
     int JVC_RPT_LENGTH  = 60000;
 
+    public void transmit(int[] data){
+        irManager.transmit(40000, data);
+    }
+    public void transmit (int[] data, int frequency){
+        irManager.transmit(40000, data);
+    }
 
 //+=============================================================================
 // JVC does NOT repeat by sending a separate code (like NEC does).
@@ -364,15 +354,9 @@ public class IRcontroller {
         listPulses.clear();
 
         if (!repeat){
-            listPulses.remove(0);
-            listPulses.remove(0);
-
-            irManager.transmit(38000, listToArray(listPulses));
-            return true;
+            listPulses.add(JVC_HDR_MARK);    //add stuff at the beginning
+            listPulses.add(JVC_HDR_SPACE);
         }
-
-        listPulses.add(JVC_HDR_MARK);    //add stuff at the beginning
-        listPulses.add(JVC_HDR_SPACE);
 
         addPulseLengths(binary, JVC_ONE_SPACE, JVC_ZERO_SPACE, JVC_BIT_MARK, true);    //add pulses for about the data
 
@@ -383,6 +367,60 @@ public class IRcontroller {
         irManager.transmit(38000, listToArray(listPulses));
         return true;
     }
+
+    int RS232_BITS = 8;
+    int RS232_MARK = 500;
+
+    public boolean sendRS232 (int data, int frequency){
+        String binary = Integer.toBinaryString(data ^ 0xFF);
+        Log.e("binaryData", binary);
+
+        if (binary.length() > RS232_BITS || !IRsupported) {        //check for required number of bits is no more than allowed
+            Log.e("Problem", "returns inside RS232");
+            return false;
+        }
+        binary = addLeadingZeros(binary, RS232_BITS);        //need to add leading 0 to make sure that big enough binary value is used
+        StringBuilder tmp = new StringBuilder(binary);
+
+        tmp.insert(0, '1');
+        tmp.append('0');
+
+        Log.e("string build", tmp.toString());
+
+        listPulses.clear();
+
+        addDataRS232(tmp.toString(), RS232_MARK);
+
+        listPulses.add(1000);
+        Log.e("dataToSend", listPulses.toString());
+        irManager.transmit(frequency, listToArray(listPulses));
+        return true;
+    }
+
+    private void addDataRS232 (String binary, int mark){
+        boolean high = true;
+        int pulse = 0;
+        for (int i = 0; i < binary.length(); i++){
+
+            if (binary.charAt(i) == '1'){
+                if (!high){
+                    listPulses.add(pulse*mark);
+                    high = true;
+                    pulse = 0;
+                }
+            } else {
+                if (high){
+                    listPulses.add(pulse*mark);
+                    high = false;
+                    pulse = 0;
+                }
+            }
+            pulse++;
+        }
+        if (pulse > 0)
+            listPulses.add(pulse*mark);
+    }
+
 
     //converts from hex to dec
     private int hexToDec(int n) {
