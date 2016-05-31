@@ -369,57 +369,91 @@ public class IRcontroller {
     }
 
     int RS232_BITS = 8;
-    int RS232_MARK = 500;
+    int RS232_MARK = 500;   //us == 2000 bits/s
 
-    public boolean sendRS232 (int data, int frequency){
-        String binary = Integer.toBinaryString(data ^ 0xFF);
-        Log.e("binaryData", binary);
+    /*
+    1/ (500 * 10^-6) = 2000 bits/s
+    500 = 1 / (2000 * 10^-6) = 10^6 / (baudrate) = rs232_mark
+     */
+
+    int BAUD_MAX = 4800;
+
+    public boolean sendRS232 (long data, int frequency, int baud, int bits){
+        int rs232_mark = (int) (Math.pow(10, 6) / baud);
+
+        if (baud > BAUD_MAX) {       //make sure the transmission is GOOD and for that need
+            Log.e("Baud rate", "Too high for typical Infrared Sensor");
+//            return false;
+        }
+
+//        long mask = (long) (Math.pow(2, 8) - 1);
+//        String binary = Long.toBinaryString(data ^ mask);
+
+//        if (data > (long) Math.pow(2, RS232_BITS)-1 || !IRsupported){
+//            Log.e("Data", "Not fitting in the specified number of bits");
+//            return false;
+//        }
+
+        String binary = Long.toBinaryString(data ^ 0xFF);
 
         if (binary.length() > RS232_BITS || !IRsupported) {        //check for required number of bits is no more than allowed
-            Log.e("Problem", "returns inside RS232");
+            Log.e("Data", "Not fitting in the specified number of bits");
             return false;
         }
         binary = addLeadingZeros(binary, RS232_BITS);        //need to add leading 0 to make sure that big enough binary value is used
+
+        Log.e("binaryData", binary);
         StringBuilder tmp = new StringBuilder(binary);
 
+        tmp.reverse();
         tmp.insert(0, '1');
         tmp.append('0');
 
         Log.e("string build", tmp.toString());
 
         listPulses.clear();
+        addDataRS232(tmp.toString(), rs232_mark);
+//        listPulses.add(10000);
 
-        addDataRS232(tmp.toString(), RS232_MARK);
-
-        listPulses.add(1000);
         Log.e("dataToSend", listPulses.toString());
+
+//        int[] myData = {277, 277, 554, 554, 554, 554};
+//        irManager.transmit(frequency, myData);
         irManager.transmit(frequency, listToArray(listPulses));
         return true;
     }
 
-    private void addDataRS232 (String binary, int mark){
-        boolean high = true;
-        int pulse = 0;
-        for (int i = 0; i < binary.length(); i++){
+    
 
-            if (binary.charAt(i) == '1'){
-                if (!high){
-                    listPulses.add(pulse*mark);
-                    high = true;
-                    pulse = 0;
-                }
-            } else {
-                if (high){
-                    listPulses.add(pulse*mark);
-                    high = false;
-                    pulse = 0;
-                }
+    private void addDataRS232 (String binary, int mark){
+        int pulse = 0;
+        char prevChar = '1';
+        for (int i = 0; i < binary.length(); i++){
+            if (prevChar != binary.charAt(i)){
+                listPulses.add(pulse*mark);
+                prevChar = binary.charAt(i);
+                pulse = 0;
             }
             pulse++;
         }
         if (pulse > 0)
             listPulses.add(pulse*mark);
     }
+
+    //        boolean high = true;
+    //            if (binary.charAt(i) == '1'){
+//                if (!high){
+//                    listPulses.add(pulse*mark);
+//                    high = true;
+//                    pulse = 0;
+//                }
+//            } else {
+//                if (high){
+//                    listPulses.add(pulse*mark);
+//                    high = false;
+//                    pulse = 0;
+//                }
+//            }
 
 
     //converts from hex to dec

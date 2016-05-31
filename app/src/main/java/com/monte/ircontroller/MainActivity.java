@@ -30,13 +30,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private EditText transmitData;
     private IRcontroller irController;
     private ConsumerIrManager manager;
+    private EditText baudRate;
 
     private Spinner protocolSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         transmitFreq = (EditText) findViewById(R.id.transmitFrequencyText);
         transmitData = (EditText) findViewById(R.id.transmitDataText);
+        baudRate = (EditText) findViewById(R.id.baudRateText);
 
         irController = new IRcontroller(this);
 
@@ -69,39 +71,44 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void sendIR (View view){
         int freq;
         int data;
+        int baud;
         try {
             freq = Integer.parseInt(transmitFreq.getText().toString());
             data = Integer.parseInt(transmitData.getText().toString());
+            baud = Integer.parseInt(baudRate.getText().toString());
         } catch (Exception e){
             Toast.makeText(getApplicationContext(), "Enter INT in the correct range!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        data = Integer.valueOf(String.valueOf(data), 16);
+//        data = Integer.valueOf(String.valueOf(data), 16);
 
-        if (irController.sendRS232(data, freq))
-            return;
+        for (int i = 0; i < 3; i++)
+            irController.sendRS232(data, freq, baud, 8);
+        return;
+//        if (irController.sendRS232(data, freq, baud, 8))
+//            return;
 
-        switch (protocol){
-            case 0:     //Sony
-                irController.sendSony(data);
-                break;
-            case 1:     //NEC
-                irController.sendNEC(data);
-                break;
-            case 2:     //Samsung
-                irController.sendSamsung(data);
-                break;
-            case 3:     //LG
-                irController.sendLG(data);
-                break;
-            case 4:     //DISH
-                irController.sendDISH(data);
-                break;
-            case 5:     //JVC
-                irController.sendJVC(data, false);
-                break;
-        }
+//        switch (protocol){
+//            case 0:     //Sony
+//                irController.sendSony(data);
+//                break;
+//            case 1:     //NEC
+//                irController.sendNEC(data);
+//                break;
+//            case 2:     //Samsung
+//                irController.sendSamsung(data);
+//                break;
+//            case 3:     //LG
+//                irController.sendLG(data);
+//                break;
+//            case 4:     //DISH
+//                irController.sendDISH(data);
+//                break;
+//            case 5:     //JVC
+//                irController.sendJVC(data, false);
+//                break;
+//        }
 
 //        IrCommand necCommand = IrCommand.NEC.buildNEC(32, 0x723F);
 //        manager.transmit(necCommand);
@@ -117,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //        irController.sendLGHex(Integer.parseInt(transmitFreq.getText().toString()));
 //        irController.sendLG(0x12345);
 
-        Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_SHORT).show();
     }
 
     @Override
