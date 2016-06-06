@@ -4,8 +4,6 @@ package com.monte.ircontroller;
  * Created by monte on 26/05/16.
  */
 
-import android.Manifest;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,7 +21,6 @@ import android.widget.Toast;
 import com.monte.ircontroller.library.*;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
-
     private TextView minFreqText;
     private TextView maxFreqText;
     private EditText transmitFreq;
@@ -70,11 +67,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     public void sendIR (View view){
         int freq;
-        int data;
+//        int data;
         int baud;
         try {
             freq = Integer.parseInt(transmitFreq.getText().toString());
-            data = Integer.parseInt(transmitData.getText().toString());
+//            data = Integer.parseInt(transmitData.getText().toString());
             baud = Integer.parseInt(baudRate.getText().toString());
         } catch (Exception e){
             Toast.makeText(getApplicationContext(), "Enter INT in the correct range!", Toast.LENGTH_SHORT).show();
@@ -83,9 +80,28 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 //        data = Integer.valueOf(String.valueOf(data), 16);
 
-        for (int i = 0; i < 3; i++)
-            irController.sendRS232(data, freq, baud, 8);
-        return;
+        // Device model
+        String PhoneModel = android.os.Build.MODEL;
+        // Android version
+        String AndroidVersion = android.os.Build.VERSION.RELEASE;
+
+        Log.e("Phone Model", PhoneModel);
+        Log.e("AndroidVersion", AndroidVersion);
+
+        if (PhoneModel == "SM-G925F"){
+            //add additional delay???
+        }
+
+//        irController.sendNEC(0x5343);
+        String myData = transmitData.getText().toString();
+        for (int i = 0; i < myData.length(); i++){
+            irController.sendRS232((int)myData.charAt(i), freq, baud, 8);
+        }
+
+
+//        for (int i = 0; i < 3; i++)
+//            irController.sendRS232(data, freq, baud, 8);
+//        return;
 //        if (irController.sendRS232(data, freq, baud, 8))
 //            return;
 
@@ -110,19 +126,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //                break;
 //        }
 
-//        IrCommand necCommand = IrCommand.NEC.buildNEC(32, 0x723F);
+//        IrCommand necCommand = IrCommand.NEC.buildNEC(32, 0x723F56);
+//        for (int i = 0; i < necCommand.pattern.length; i++)
+//            System.out.print(necCommand.pattern);
+//        Log.e("Pattern", necCommand.pattern.toString());
+
 //        manager.transmit(necCommand);
 
-//        irController.sendSamsung(0x12345678);
-//        irController.sendDISH(0x1234);
-//        irController.sendJVC(0x1234, false);
-//        irController.sendJVC(0x1234, true);
-//        irController.sendSony(69);
-//        irController.sendSonyHex(45);
-//        Log.e("Sending HEX", Integer.toHexString(69));
-//        irController.sendSonyHex(Integer.parseInt(transmitFreq.getText().toString()));
-//        irController.sendLGHex(Integer.parseInt(transmitFreq.getText().toString()));
-//        irController.sendLG(0x12345);
+//        irController.transmit(necCommand.frequency, necCommand.pattern);
 
 //        Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_SHORT).show();
     }
@@ -159,38 +170,3 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         protocol = 0;
     }
 }
-
-//        // Check permissions
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.TRANSMIT_IR)
-//                != PackageManager.PERMISSION_GRANTED){
-//
-//            ActivityCompat.requestPermissions(this,
-//                    new String[]{Manifest.permission.READ_CONTACTS},
-//                    MY_PERMISSIONS_REQUEST_TRANSMIT_IR);
-//        }
-
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode,
-//                                           String permissions[], int[] grantResults) {
-//        switch (requestCode) {
-//            case MY_PERMISSIONS_REQUEST_TRANSMIT_IR: {
-//                // If request is cancelled, the result arrays are empty.
-//                if (grantResults.length > 0
-//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                } else {
-//                    // permission denied, boo! Disable the
-//                    Toast.makeText(this, "You need this permission to ru nthe app!", Toast.LENGTH_SHORT).show();
-//                    try {
-//                        Thread.sleep(100);
-//                        finish();
-//                    } catch (InterruptedException e){
-//                        Log.e("IR permission", "DENIED");
-//                    }
-//                }
-//                return;
-//            }
-//
-//            // other 'case' lines to check for other
-//            // permissions this app might request
-//        }
-//    }

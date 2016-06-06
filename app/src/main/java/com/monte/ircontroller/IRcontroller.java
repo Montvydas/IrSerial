@@ -1,12 +1,7 @@
 package com.monte.ircontroller;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.hardware.ConsumerIrManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -51,6 +46,11 @@ public class IRcontroller {
             Toast.makeText(context, "IR NOT supported!", Toast.LENGTH_SHORT).show();
             this.IRsupported = false;
         }
+    }
+
+    public boolean transmit (int frequency, int[] data){
+        irManager.transmit(frequency, data);
+        return true;
     }
 
     public ConsumerIrManager getIrManager() {
@@ -244,6 +244,8 @@ public class IRcontroller {
     int NEC_ZERO_SPACE  = 560;
     int NEC_RPT_SPACE  = 2250;
 
+
+
     public boolean sendNEC (int data){
         String binary = Integer.toBinaryString(data);
 
@@ -377,7 +379,6 @@ public class IRcontroller {
      */
 
     int BAUD_MAX = 4800;
-
     public boolean sendRS232 (long data, int frequency, int baud, int bits){
         int rs232_mark = (int) (Math.pow(10, 6) / baud);
 
@@ -386,20 +387,20 @@ public class IRcontroller {
 //            return false;
         }
 
-//        long mask = (long) (Math.pow(2, 8) - 1);
-//        String binary = Long.toBinaryString(data ^ mask);
+        long mask= (long) (Math.pow(2, 8) - 1);
+        String binary = Long.toBinaryString(data ^ mask);
 
-//        if (data > (long) Math.pow(2, RS232_BITS)-1 || !IRsupported){
-//            Log.e("Data", "Not fitting in the specified number of bits");
-//            return false;
-//        }
-
-        String binary = Long.toBinaryString(data ^ 0xFF);
-
-        if (binary.length() > RS232_BITS || !IRsupported) {        //check for required number of bits is no more than allowed
+        if (data > (long) Math.pow(2, RS232_BITS)-1 || !IRsupported){
             Log.e("Data", "Not fitting in the specified number of bits");
             return false;
         }
+
+//        String binary = Long.toBinaryString(data ^ 0xFF);
+
+//        if (binary.length() > RS232_BITS || !IRsupported) {        //check for required number of bits is no more than allowed
+//            Log.e("Data", "Not fitting in the specified number of bits");
+//            return false;
+//        }
         binary = addLeadingZeros(binary, RS232_BITS);        //need to add leading 0 to make sure that big enough binary value is used
 
         Log.e("binaryData", binary);
@@ -413,17 +414,15 @@ public class IRcontroller {
 
         listPulses.clear();
         addDataRS232(tmp.toString(), rs232_mark);
-//        listPulses.add(10000);
 
+        if (android.os.Build.MODEL == "SM-G925F"){
+            listPulses.add(10000);
+        }
         Log.e("dataToSend", listPulses.toString());
 
-//        int[] myData = {277, 277, 554, 554, 554, 554};
-//        irManager.transmit(frequency, myData);
         irManager.transmit(frequency, listToArray(listPulses));
         return true;
     }
-
-    
 
     private void addDataRS232 (String binary, int mark){
         int pulse = 0;
@@ -439,21 +438,6 @@ public class IRcontroller {
         if (pulse > 0)
             listPulses.add(pulse*mark);
     }
-
-    //        boolean high = true;
-    //            if (binary.charAt(i) == '1'){
-//                if (!high){
-//                    listPulses.add(pulse*mark);
-//                    high = true;
-//                    pulse = 0;
-//                }
-//            } else {
-//                if (high){
-//                    listPulses.add(pulse*mark);
-//                    high = false;
-//                    pulse = 0;
-//                }
-//            }
 
 
     //converts from hex to dec
