@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 
 /**
@@ -25,23 +26,28 @@ public class IrSerial {
     private final int DEFAULT_FREQ = 38400;
     private final int DEFAULT_BAUD = 2400;
     private final int MAX_BAUD = 4800;
+    private final int RS232_BITS = 8;
     private int baud;
 
-    //constructor -----------------------
+    //constructor ------------------------------
     public IrSerial (Context context){
         this.freq = DEFAULT_FREQ;
+        this.baud = DEFAULT_BAUD;
         initialise(context);
     }
 
-    public IrSerial (Context context, int freq){
+    public IrSerial (Context context, int freq, int baud){
+        if (baud > MAX_BAUD)
+            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared");
+
         this.freq = freq;
+        this.baud = baud;
         initialise(context);
     }
 
     private void initialise (Context context){
         this.irManager = (ConsumerIrManager) context.getSystemService(AppCompatActivity.CONSUMER_IR_SERVICE);
         this.context = context;
-
 
         if (irManager.hasIrEmitter()){
             this.irFrequencies = irManager.getCarrierFrequencies();
@@ -52,9 +58,8 @@ public class IrSerial {
             this.irSupported = false;
         }
     }
-    //-----------------------------------
 
-    //getters
+    //getters-----------------------------------
     public int getMinFreq() {
         return minFreq;
     }
@@ -68,14 +73,22 @@ public class IrSerial {
         return irSupported;
     }
 
-    //setters
+    //setters ----------------------------------
     public void setFreq(int freq) {
         this.freq = freq;
     }
 
-    //methods
+    //methods ----------------------------------
+    public void begin (int baud, int freq){
+        if (baud > MAX_BAUD)
+            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared");
+
+        this.baud = baud;
+        this.freq = freq;
+    }
+
     public boolean send (int[] data){
-        if (!IrSupported)
+        if (!irSupported)
             return false;
 
         irManager.transmit(freq, data);
@@ -83,73 +96,56 @@ public class IrSerial {
     }
 
     public int[] construct (String data){
-        return new int[12];
+        listPulses.clear();
+
+        for (int i = 0; i < data.length(); i++){
+             constructSequence(Long.toBinaryString(data.charAt(i)));
+        }
+
+        return listToArray(listPulses);
     }
 
     public int[] contruct (char data){
-        return new int[12];
+        listPulses.clear();
+        constructSequence(Long.toBinaryString((int) data));
+        return listToArray(listPulses);
     }
 
     public int[] construct (int data){
+        listPulses.clear();
         long mask= (long) (Math.pow(2, 8) - 1);
-        String binary = Long.toBinaryString(data ^ mask);
+        String binaryData = Long.toBinaryString(data ^ mask);
 //        String binary = Long.toBinaryString(data ^ 0xFF);
 
         if (data > (long) Math.pow(2, RS232_BITS)-1){
-            Log.e("Construct Error", "Data Not fitting in 8 bits.");
-            
+//            if (binaryData.length() > RS232_BITS)
+            Log.e("Construct Warning", "Data Not fitting in 8 bits.");
         }
 
-        return new int[12];
+        constructSequence(binaryData);
+        return listToArray(listPulses);
     }
 
-
-    int BAUD_MAX = 4800;
-    int RS232_BITS = 8;
-
-    private boolean constructSequence (long data, int frequency, int baud, int bits){
+    private void constructSequence (String binaryData){
         int rs232_mark = (int) (Math.pow(10, 6) / baud);
 
-        if (baud > BAUD_MAX) {       //make sure the transmission is GOOD and for that need
-            Log.e("Baud rate", "Too high for typical Infrared Sensor");
-//            return false;
-        }
+        binaryData = addLeadingZeros(binaryData, RS232_BITS);        //need to add leading 0 to make sure that big enough binary value is used
 
-        long mask= (long) (Math.pow(2, 8) - 1);
-        String binary = Long.toBinaryString(data ^ mask);
-
-        if (data > (long) Math.pow(2, RS232_BITS)-1 || !irSupported){
-            Log.e("Data", "Not fitting in the specified number of bits");
-            return false;
-        }
-
-//        String binary = Long.toBinaryString(data ^ 0xFF);
-
-//        if (binary.length() > RS232_BITS || !IRsupported) {        //check for required number of bits is no more than allowed
-//            Log.e("Data", "Not fitting in the specified number of bits");
-//            return false;
-//        }
-        binary = addLeadingZeros(binary, RS232_BITS);        //need to add leading 0 to make sure that big enough binary value is used
-
-        Log.e("binaryData", binary);
-        StringBuilder tmp = new StringBuilder(binary);
+//        Log.e("binaryData", binaryData);
+        StringBuilder tmp = new StringBuilder(binaryData);
 
         tmp.reverse();
         tmp.insert(0, '1');
         tmp.append('0');
 
-        Log.e("string build", tmp.toString());
+//        Log.e("string build", tmp.toString());
 
-        listPulses.clear();
         addDataRS232(tmp.toString(), rs232_mark);
 
         if (android.os.Build.MODEL == "SM-G925F"){
             listPulses.add(10000);
         }
-        Log.e("dataToSend", listPulses.toString());
-
-        irManager.transmit(frequency, listToArray(listPulses));
-        return true;
+//        Log.e("dataToSend", listPulses.toString());
     }
 
     private void addDataRS232 (String binary, int mark){
@@ -167,26 +163,10 @@ public class IrSerial {
             listPulses.add(pulse*mark);
     }
 
-
-    //converts from hex to dec
-    private int hexToDec(int n) {
-        return Integer.valueOf(String.valueOf(n), 16);
-    }
-
-    private void addPulseLengths (String binary, int one_mark, int zero_mark, int space, boolean reverse){
-        for (int i = 0; i < binary.length(); i++) {
-            if (reverse)
-                listPulses.add(space);
-
-            if (binary.charAt(i) == '1') {
-                listPulses.add(one_mark);
-            } else {
-                listPulses.add(zero_mark);
-            }
-
-            if (!reverse)
-                listPulses.add(space);
-        }
+    private String addLeadingZeros (String binary, int length){
+        if (binary.length() < length)
+            binary = String.format("%0" + (length-binary.length()) + "d", 0).replace("0", "0") + binary; //add zeroes at the begining
+        return binary;
     }
 
     private int[] listToArray (List<Integer> myData){
@@ -198,12 +178,4 @@ public class IrSerial {
         }
         return newData;
     }
-
-    private String addLeadingZeros (String binary, int length){
-        if (binary.length() < length)
-            binary = String.format("%0" + (length-binary.length()) + "d", 0).replace("0", "0") + binary; //add zeroes at the begining
-        return binary;
-    }
-
-
 }
