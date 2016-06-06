@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.monte.ircontroller.library.*;
+import com.monte.ircontroller.protocols.IrSerial;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private TextView minFreqText;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private Spinner protocolSpinner;
 
+    private IrSerial mySerial;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,8 +50,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         baudRate = (EditText) findViewById(R.id.baudRateText);
 
         irController = new IRcontroller(this);
-
         manager = ConsumerIrManager.getSupportConsumerIrManager(this);
+
+        mySerial = new IrSerial(this, IrSerial.DEFAULT_FREQ, 3600);
 
         protocolSpinner = (Spinner) findViewById(R.id.protocolSpinner);
         protocolSpinner.setOnItemSelectedListener(this);
@@ -93,11 +96,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
 
 //        irController.sendNEC(0x5343);
-        String myData = transmitData.getText().toString();
-        for (int i = 0; i < myData.length(); i++){
-            irController.sendRS232((int)myData.charAt(i), freq, baud, 8);
-        }
 
+        mySerial.send(transmitData.getText().toString());
 
 //        for (int i = 0; i < 3; i++)
 //            irController.sendRS232(data, freq, baud, 8);

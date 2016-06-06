@@ -15,19 +15,28 @@ import java.util.List;
 public class IrSerial {
 
     //vars
+    private int DEBUG = 1;
+
     private ConsumerIrManager irManager;
     private Context context;
     private int minFreq;
     private int maxFreq;
     private ConsumerIrManager.CarrierFrequencyRange[] irFrequencies;
     private boolean irSupported;
-    public List<Integer> listPulses = new ArrayList<>();
+    private List<Integer> listPulses = new ArrayList<>();
     private int freq;
-    private final int DEFAULT_FREQ = 38400;
-    private final int DEFAULT_BAUD = 2400;
-    private final int MAX_BAUD = 4800;
-    private final int RS232_BITS = 8;
+    public final static int DEFAULT_FREQ = 38400;
+    public final static int DEFAULT_BAUD = 2400;
+    public final static int MAX_BAUD = 4800;
+    public final static int RS232_BITS = 8;
     private int baud;
+
+    /**
+     * Initialise the IR transmission with default values of frequency of 38400 Hz and
+     * baud rate of 2400 bits/s.
+     *
+     * @param context
+     */
 
     //constructor ------------------------------
     public IrSerial (Context context){
@@ -36,15 +45,32 @@ public class IrSerial {
         initialise(context);
     }
 
+    /**
+     * This time you can also initialise the transmission and specify your desired frequency and baud rate.
+     *
+     * @param context
+     * @param freq
+     * @param baud
+     */
     public IrSerial (Context context, int freq, int baud){
         if (baud > MAX_BAUD)
-            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared");
+            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set Anyway.");
+        if (freq > maxFreq || freq < minFreq){
+            Log.e("Frequency Warning", "Specified frequency is not within the boundary. Was set DEFAULT.");
+            this.freq = DEFAULT_FREQ;
+        }
 
         this.freq = freq;
         this.baud = baud;
         initialise(context);
     }
 
+    /**
+     * Part of the constructor. This will have to be called for any type of construction as it
+     * also initialises the IrManager.
+     *
+     * @param context
+     */
     private void initialise (Context context){
         this.irManager = (ConsumerIrManager) context.getSystemService(AppCompatActivity.CONSUMER_IR_SERVICE);
         this.context = context;
@@ -72,22 +98,41 @@ public class IrSerial {
     public boolean isIrSupported() {
         return irSupported;
     }
+    public int getBaud() {
+        return baud;
+    }
 
     //setters ----------------------------------
     public void setFreq(int freq) {
+        if (freq > maxFreq || freq < minFreq){
+            Log.e("Frequency Warning", "Specified frequency is not within the boundary. Was discarded.");
+            return;
+        }
         this.freq = freq;
     }
-
-    //methods ----------------------------------
-    public void begin (int baud, int freq){
+    public void setBaud(int baud) {
         if (baud > MAX_BAUD)
-            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared");
+            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set anyway.");
 
+        this.baud = baud;
+    }
+
+    //methods----------------------------------
+    public void begin (int baud, int freq){
+        if (baud > MAX_BAUD) {
+            Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set anyway.");
+        }
+
+        if (freq > maxFreq || freq < minFreq){
+            Log.e("Frequency Warning", "Specified frequency is not within the boundary. Was discarded.");
+            return;
+        }
         this.baud = baud;
         this.freq = freq;
     }
 
-    public boolean send (int[] data){
+    //Sends raw data coming from an integer array
+    public boolean sendRaw (int[] data){
         if (!irSupported)
             return false;
 
@@ -95,19 +140,45 @@ public class IrSerial {
         return true;
     }
 
+    //sending int
+    public boolean send (int data){
+        if (!irSupported)
+            return false;
+        sendRaw(construct(data));
+        return true;
+    }
+
+    public boolean send (char data){
+        if (!irSupported)
+            return false;
+        sendRaw(construct(data));
+        return true;
+    }
+
+    public boolean send (String data){
+        if (!irSupported)
+            return false;
+        sendRaw(construct(data));
+
+//        for (int i = 0; i < data.length(); i++)
+//            sendRaw(construct(data.charAt(i)));
+        return true;
+    }
+
+
     public int[] construct (String data){
         listPulses.clear();
 
         for (int i = 0; i < data.length(); i++){
-             constructSequence(Long.toBinaryString(data.charAt(i)));
+             constructSequence(Long.toBinaryString(data.charAt(i) ^ 0xFF));
         }
 
         return listToArray(listPulses);
     }
 
-    public int[] contruct (char data){
+    public int[] construct (char data){
         listPulses.clear();
-        constructSequence(Long.toBinaryString((int) data));
+        constructSequence(Long.toBinaryString(data ^ 0xFF));
         return listToArray(listPulses);
     }
 
@@ -119,7 +190,7 @@ public class IrSerial {
 
         if (data > (long) Math.pow(2, RS232_BITS)-1){
 //            if (binaryData.length() > RS232_BITS)
-            Log.e("Construct Warning", "Data Not fitting in 8 bits.");
+            Log.e("Construct Warning", "Data Not fitting in 8 bits. Sent the lower 8 bits only.");
         }
 
         constructSequence(binaryData);
@@ -131,21 +202,30 @@ public class IrSerial {
 
         binaryData = addLeadingZeros(binaryData, RS232_BITS);        //need to add leading 0 to make sure that big enough binary value is used
 
-//        Log.e("binaryData", binaryData);
+        if (DEBUG == 1)
+            Log.e("binaryData", binaryData);
+
         StringBuilder tmp = new StringBuilder(binaryData);
 
         tmp.reverse();
         tmp.insert(0, '1');
         tmp.append('0');
 
-//        Log.e("string build", tmp.toString());
+        if (DEBUG == 1)
+            Log.e("string build", tmp.toString());
 
         addDataRS232(tmp.toString(), rs232_mark);
 
+        //tested with Samsung S6 edge, which was not working very well otherwise... !!! Need more testing
         if (android.os.Build.MODEL == "SM-G925F"){
             listPulses.add(10000);
         }
-//        Log.e("dataToSend", listPulses.toString());
+
+        if (listPulses.size() % 2 != 0)     //mostly used for strings as when one is built, we need to make sure the
+            listPulses.add(rs232_mark);     //final pulse goes to LOW
+
+        if (DEBUG == 1)
+            Log.e("dataToSend", listPulses.toString());
     }
 
     private void addDataRS232 (String binary, int mark){
