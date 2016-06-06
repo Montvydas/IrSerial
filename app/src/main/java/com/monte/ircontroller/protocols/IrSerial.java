@@ -31,6 +31,11 @@ public class IrSerial {
     public final static int RS232_BITS = 8;
     private int baud;
 
+    private boolean correctionEnabled = false;
+    public final static int CORRECTION_DELAY = 10000;
+
+    public final static int CORRECTION_TEST_VALUE = 0x99;
+
     /**
      * Initialise the IR transmission with default values of frequency of 38400 Hz and
      * baud rate of 2400 bits/s.
@@ -40,9 +45,9 @@ public class IrSerial {
 
     //constructor ------------------------------
     public IrSerial (Context context){
+        initialise(context);
         this.freq = DEFAULT_FREQ;
         this.baud = DEFAULT_BAUD;
-        initialise(context);
     }
 
     /**
@@ -53,6 +58,8 @@ public class IrSerial {
      * @param baud
      */
     public IrSerial (Context context, int freq, int baud){
+        initialise(context);
+
         if (baud > MAX_BAUD)
             Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set Anyway.");
         if (freq > maxFreq || freq < minFreq){
@@ -62,7 +69,6 @@ public class IrSerial {
 
         this.freq = freq;
         this.baud = baud;
-        initialise(context);
     }
 
     /**
@@ -101,6 +107,9 @@ public class IrSerial {
     public int getBaud() {
         return baud;
     }
+    public boolean isCorrectionEnabled() {
+        return correctionEnabled;
+    }
 
     //setters ----------------------------------
     public void setFreq(int freq) {
@@ -113,12 +122,14 @@ public class IrSerial {
     public void setBaud(int baud) {
         if (baud > MAX_BAUD)
             Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set anyway.");
-
         this.baud = baud;
+    }
+    public void setCorrectionEnabled(boolean correctionEnabled) {
+        this.correctionEnabled = correctionEnabled;
     }
 
     //methods----------------------------------
-    public void begin (int baud, int freq){
+    public void begin (int freq, int baud){
         if (baud > MAX_BAUD) {
             Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set anyway.");
         }
@@ -173,12 +184,16 @@ public class IrSerial {
              constructSequence(Long.toBinaryString(data.charAt(i) ^ 0xFF));
         }
 
+        if (correctionEnabled)
+            listPulses.add(CORRECTION_DELAY);
         return listToArray(listPulses);
     }
 
     public int[] construct (char data){
         listPulses.clear();
         constructSequence(Long.toBinaryString(data ^ 0xFF));
+        if (correctionEnabled)
+            listPulses.add(CORRECTION_DELAY);
         return listToArray(listPulses);
     }
 
@@ -194,7 +209,13 @@ public class IrSerial {
         }
 
         constructSequence(binaryData);
+        if (correctionEnabled)
+            listPulses.add(CORRECTION_DELAY);
         return listToArray(listPulses);
+    }
+
+    private void performCorrectionTest (){
+        send(CORRECTION_TEST_VALUE);
     }
 
     private void constructSequence (String binaryData){
@@ -216,11 +237,7 @@ public class IrSerial {
 
         addDataRS232(tmp.toString(), rs232_mark);
 
-        //tested with Samsung S6 edge, which was not working very well otherwise... !!! Need more testing
-        if (android.os.Build.MODEL == "SM-G925F"){
-            listPulses.add(10000);
-        }
-
+        //!!!!!!! MIGHT HAVE TO MOVE THIS SOMEWHERE ELSE
         if (listPulses.size() % 2 != 0)     //mostly used for strings as when one is built, we need to make sure the
             listPulses.add(rs232_mark);     //final pulse goes to LOW
 
