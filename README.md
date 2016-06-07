@@ -1,15 +1,14 @@
 # IrSerial
 
-//Initialise the object by passing the context, frequency and baud rate;
 
+```java
+//Initialise the object by passing the context, frequency and baud rate;
 IrSerial irSerial = new IrSerial(this, IrSerial.DEFAULT_FREQ, 3600);
 
 //Initialise another object by passing the context and leaving the freq and baud rate to be default values 38400 & 2400 respectively
-
 IrSerial irSerial2 = new IrSerial(this);
 
 //check if your phone has IR blaster
-
 if (!irSerial.isIrSupported()){
     Toast.makeText(this, "IR is NOT supported!", Toast.LENGTH_SHORT).show();
 } else {
@@ -45,3 +44,4 @@ irSerial.sendRaw(myPulses);                 //send pulses
 System.out.println("DEFAULT BAUD=" + IrSerial.DEFAULT_BAUD);//default baud is 2400 bits/s
 System.out.println("DEFAULT FREQ=" + IrSerial.DEFAULT_FREQ);//default freq is 38400 Hz
 System.out.println("MAX BAUD=" + IrSerial.MAX_BAUD);        //The IR receivers in the lab can receive only up to 4800 bits/s
+```
