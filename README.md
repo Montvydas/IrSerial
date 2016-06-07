@@ -1,6 +1,14 @@
 # IrSerial
 
+Providing library, which allows sending serial data through Infrared. The good thing about it is that you can use the Serial or SoftwareSerial libraries on Arduino to communicate through infrared with your smartphone. Although, as the phones only have an infrared transmitter, it will be one-sided communication, thus in the Arduino code you will only need to specify one pin:
+```C
+#define RX_PIN 12
+#define NON_EXISTING_PIN 50 
 
+SoftwareSerial mySerial (RX_PIN, NON_EXISTING_PIN);
+```
+
+# Android Code Example
 ```java
 //Initialise the object by passing the context, frequency and baud rate;
 IrSerial irSerial = new IrSerial(this, IrSerial.DEFAULT_FREQ, 3600);
