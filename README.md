@@ -1,13 +1,15 @@
 # IrSerial
 
 //Initialise the object by passing the context, frequency and baud rate;
+
 IrSerial irSerial = new IrSerial(this, IrSerial.DEFAULT_FREQ, 3600);
 
-//Initialise another object by passing the context and leaving the freq and baud rate to be
-// default values 38400 & 2400 respectively
+//Initialise another object by passing the context and leaving the freq and baud rate to be default values 38400 & 2400 respectively
+
 IrSerial irSerial2 = new IrSerial(this);
 
 //check if your phone has IR blaster
+
 if (!irSerial.isIrSupported()){
     Toast.makeText(this, "IR is NOT supported!", Toast.LENGTH_SHORT).show();
 } else {
