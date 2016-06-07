@@ -146,34 +146,35 @@ public class IrSerial {
     public boolean sendRaw (int[] data){
         if (!irSupported)
             return false;
-
-        irManager.transmit(freq, data);
+        try {
+            irManager.transmit(freq, data);
+        } catch (Exception e){
+            Log.e("Transmission Error:", "You don't have IR blaster, your baud rate is too small or message too big");
+            return false;
+        }
         return true;
     }
 
     //sending int
     public boolean send (int data){
-        if (!irSupported)
-            return false;
-        sendRaw(construct(data));
-        return true;
+        return sendRaw(construct(data));
     }
+//    public boolean sendHex (String hexData){
+//        if (!irSupported)
+//            return false;
+//
+//        sendRaw(construct((int) hexToLong(hexData)));
+//        return true;
+//    }
 
     public boolean send (char data){
-        if (!irSupported)
-            return false;
-        sendRaw(construct(data));
-        return true;
+        return sendRaw(construct(data));
     }
 
     public boolean send (String data){
-        if (!irSupported)
-            return false;
-        sendRaw(construct(data));
-
+        return sendRaw(construct(data));
 //        for (int i = 0; i < data.length(); i++)
 //            sendRaw(construct(data.charAt(i)));
-        return true;
     }
 
 
@@ -199,12 +200,12 @@ public class IrSerial {
 
     public int[] construct (int data){
         listPulses.clear();
-        long mask= (long) (Math.pow(2, 8) - 1);
-        String binaryData = Long.toBinaryString(data ^ mask);
-//        String binary = Long.toBinaryString(data ^ 0xFF);
+//        long mask= (long) (Math.pow(2, 8) - 1);
+//        String binaryData = Long.toBinaryString(data ^ mask);
+        String binaryData = Long.toBinaryString(data ^ 0xFF);
 
         if (data > (long) Math.pow(2, RS232_BITS)-1){
-//            if (binaryData.length() > RS232_BITS)
+//        if (binaryData.length() > RS232_BITS){
             Log.e("Construct Warning", "Data Not fitting in 8 bits. Sent the lower 8 bits only.");
         }
 
@@ -257,7 +258,7 @@ public class IrSerial {
             pulse++;
         }
         if (pulse > 0)
-            listPulses.add(pulse*mark);
+            listPulses.add(pulse * mark);
     }
 
     private String addLeadingZeros (String binary, int length){

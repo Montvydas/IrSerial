@@ -13,26 +13,27 @@
     android:orientation="vertical"
     tools:showIn="@layout/activity_main">
 
-    <Spinner
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/protocolSpinner"
-        android:layout_gravity="center_horizontal" />
+        android:weightSum="3"
+        android:orientation="horizontal">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Frequencies Supported:" />
-    <TextView
-        android:id="@+id/minFreqText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="" />
-    <TextView
-        android:id="@+id/maxFreqText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Frequencies Range:"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/freqRangeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:layout_weight="2"
+            android:gravity="center"/>
+    </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -63,13 +64,13 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Data (hex):"
+            android:text="Enter Baud Rate:"
             android:layout_weight="1"/>
         <EditText
-            android:id="@+id/transmitDataText"
+            android:id="@+id/baudRateText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="12"
+            android:text="3600"
             android:gravity="center"
             android:layout_weight="2"/>
     </LinearLayout>
@@ -83,13 +84,49 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Baud Rate:"
+            android:text="Data Format:"
             android:layout_weight="1"/>
-        <EditText
-            android:id="@+id/baudRateText"
+        <RadioGroup
+            android:id="@+id/radioFormatGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2000"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HEX"
+                android:id="@+id/radioHex"
+                android:checked="true"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEC"
+                android:id="@+id/radioDec"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="STRING"
+                android:id="@+id/radioString"/>
+        </RadioGroup>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="3"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Data (hex):"
+            android:layout_weight="1"/>
+        <EditText
+            android:id="@+id/transmitDataText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:gravity="center"
             android:layout_weight="2"/>
     </LinearLayout>
