@@ -51,8 +51,7 @@ public class IrSerial {
     }
 
     /**
-     * This time you can also initialise the transmission and specify your desired frequency and baud rate.
-     *
+     * Initialise the IR transmission and specify your desired frequency and baud rate.
      * @param context
      * @param freq
      * @param baud
@@ -71,16 +70,13 @@ public class IrSerial {
         this.baud = baud;
     }
 
-    /**
-     * Part of the constructor. This will have to be called for any type of construction as it
-     * also initialises the IrManager.
-     *
-     * @param context
-     */
+    //Part of the constructor. This will have to be called for any type of construction as it
+    //also initialises the IrManager.
     private void initialise (Context context){
         this.irManager = (ConsumerIrManager) context.getSystemService(AppCompatActivity.CONSUMER_IR_SERVICE);
         this.context = context;
 
+        //usual infrared manager for sending the data
         if (irManager.hasIrEmitter()){
             this.irFrequencies = irManager.getCarrierFrequencies();
             this.minFreq = irFrequencies[0].getMinFrequency();
@@ -91,27 +87,58 @@ public class IrSerial {
         }
     }
 
-    //getters-----------------------------------
+    /**
+     * Checks what is the Minimum modulation frequency.
+     * @return
+     */
     public int getMinFreq() {
         return minFreq;
     }
+
+    /**
+     * Checks what is the Maximum modulation frequency.
+     * @return
+     */
     public int getMaxFreq() {
         return maxFreq;
     }
+
+    /**
+     * Checks the current modulation frequency.
+     * @return
+     */
     public int getFreq() {
         return freq;
     }
+
+    /**
+     * Checks if IR blaster is supported on your phone.
+     * @return
+     */
     public boolean isIrSupported() {
         return irSupported;
     }
+
+    /**
+     * Checks the current baud rate.
+     * @return
+     */
     public int getBaud() {
         return baud;
     }
+
+    /**
+     * Checks if currently the correction is enabled.
+     * @return
+     */
     public boolean isCorrectionEnabled() {
         return correctionEnabled;
     }
 
-    //setters ----------------------------------
+    /**
+     * Sets the new modulation frequency.
+     * @param freq
+     */
     public void setFreq(int freq) {
         if (freq > maxFreq || freq < minFreq){
             Log.e("Frequency Warning", "Specified frequency is not within the boundary. Was discarded.");
@@ -119,16 +146,39 @@ public class IrSerial {
         }
         this.freq = freq;
     }
+
+    /**
+     * sets new baud rate for infrared transmission.
+     * @param baud
+     */
     public void setBaud(int baud) {
         if (baud > MAX_BAUD)
             Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set anyway.");
         this.baud = baud;
     }
+
+    /**
+     * some phones skip the last pulse for some data inputs (0x99, 0x55), thus they need correction enabled.
+     * Correction is done by adding an additional pulse to the end of the pulse list, which will be skipped anyway.
+     * @param correctionEnabled
+     */
     public void setCorrectionEnabled(boolean correctionEnabled) {
         this.correctionEnabled = correctionEnabled;
     }
 
-    //methods----------------------------------
+    /**
+     * Correction test sends single hex value 0x99 (dec 153). If you receive this value on the receiver side,
+     * your phone doesn't need a correction enabled, otherwise you would need to enable correction.
+     */
+    public void performCorrectionTest (){
+        send(CORRECTION_TEST_VALUE);
+    }
+
+    /**
+     * Sets both modulation frequency and baud rate.
+     * @param freq
+     * @param baud
+     */
     public void begin (int freq, int baud){
         if (baud > MAX_BAUD) {
             Log.e("Baud Rate Warning", "Baud Rate is too high for Infrared. Was set anyway.");
@@ -142,7 +192,11 @@ public class IrSerial {
         this.freq = freq;
     }
 
-    //Sends raw data coming from an integer array
+    /**
+     * Sends raw data coming from an integer array. An array can be constructed using construct ( data ) method.
+     * @param data
+     * @return
+     */
     public boolean sendRaw (int[] data){
         if (!irSupported)
             return false;
@@ -155,10 +209,16 @@ public class IrSerial {
         return true;
     }
 
-    //sending int
+    /**
+     * Sends single integer, which should be withing 0 to 255, otherwise only the lower 8 bits will be sent.
+     * @param data
+     * @return
+     */
     public boolean send (int data){
         return sendRaw(construct(data));
     }
+
+    //Working on that
 //    public boolean sendHex (String hexData){
 //        if (!irSupported)
 //            return false;
@@ -167,17 +227,42 @@ public class IrSerial {
 //        return true;
 //    }
 
+    /**
+     * Sends single char.
+     * @param data
+     * @return
+     */
     public boolean send (char data){
         return sendRaw(construct(data));
     }
 
+    /**
+     * send string data, might be prone to errors when large strings are sent.
+     * @param data
+     * @return
+     */
     public boolean send (String data){
         return sendRaw(construct(data));
-//        for (int i = 0; i < data.length(); i++)
-//            sendRaw(construct(data.charAt(i)));
+    }
+
+    /**
+     * sends Strings in slower speeds, but less prone to errors.
+     * @param data
+     * @return
+     */
+    public boolean sendSlow (String data) {
+        for (int i = 0; i < data.length(); i++)
+            if (!sendRaw(construct(data.charAt(i))))
+                return false;
+        return true;
     }
 
 
+    /**
+     * Used to construct an integer array of pulse length values.
+     * @param data
+     * @return
+     */
     public int[] construct (String data){
         listPulses.clear();
 
@@ -185,11 +270,17 @@ public class IrSerial {
              constructSequence(Long.toBinaryString(data.charAt(i) ^ 0xFF));
         }
 
+        //some phones skip the last pulse for some data types, thus they need correction enabled
         if (correctionEnabled)
             listPulses.add(CORRECTION_DELAY);
         return listToArray(listPulses);
     }
 
+    /**
+     * Used to construct an integer array of pulse length values.
+     * @param data
+     * @return
+     */
     public int[] construct (char data){
         listPulses.clear();
         constructSequence(Long.toBinaryString(data ^ 0xFF));
@@ -198,6 +289,11 @@ public class IrSerial {
         return listToArray(listPulses);
     }
 
+    /**
+     * Used to construct an integer array of pulse length values.
+     * @param data
+     * @return
+     */
     public int[] construct (int data){
         listPulses.clear();
 //        long mask= (long) (Math.pow(2, 8) - 1);
@@ -213,10 +309,6 @@ public class IrSerial {
         if (correctionEnabled)
             listPulses.add(CORRECTION_DELAY);
         return listToArray(listPulses);
-    }
-
-    private void performCorrectionTest (){
-        send(CORRECTION_TEST_VALUE);
     }
 
     private void constructSequence (String binaryData){

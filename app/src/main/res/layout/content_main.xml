@@ -11,12 +11,42 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.monte.ircontroller.MainActivity"
     android:orientation="vertical"
-    tools:showIn="@layout/activity_main">
+    tools:showIn="@layout/activity_main"
+    android:background="#A4ADD3">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:weightSum="3"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Correction Enabled?"
+            android:layout_weight="1"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Perform Test"
+            android:layout_weight="1"
+            android:background="@color/colorPrimary"
+            android:textColor="#FFFFFF"
+            android:onClick="performTest"/>
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/correctionSwitch"
+            android:text="Enable"
+            android:textAlignment="textEnd"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:weightSum="3"
+
         android:orientation="horizontal">
 
         <TextView
@@ -37,7 +67,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:weightSum="3"
         android:orientation="horizontal">
 
@@ -57,7 +87,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:weightSum="3"
         android:orientation="horizontal">
 
@@ -77,7 +107,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:weightSum="3"
         android:orientation="horizontal">
 
@@ -97,8 +127,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="HEX"
-                android:id="@+id/radioHex"
-                android:checked="true"/>
+                android:id="@+id/radioHex" />
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -108,26 +137,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="STRING"
-                android:id="@+id/radioString"/>
+                android:id="@+id/radioString"
+                android:checked="true"/>
         </RadioGroup>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:weightSum="3"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Data (hex):"
+            android:text="Enter Data:"
             android:layout_weight="1"/>
         <EditText
             android:id="@+id/transmitDataText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:text="Hello World!"
             android:layout_weight="2"/>
     </LinearLayout>
 
